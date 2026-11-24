@@ -44,6 +44,9 @@ python3 tools/build.py
 | `tools/` | Bauskript |
 | `test/bot.py` | spielt das Abenteuer automatisch durch (Playwright) |
 
+GitHub Pages veröffentlicht die Seite aus dem Zweig `gh-pages`. Nach Änderungen an `main` also auch dorthin schieben:
+`git push origin main main:gh-pages`
+
 ## Mitwirkende und Lizenzen
 
 - Abenteuer: „Die Haut des Odûn“, Spielbuch von Claude (Anthropic) für Thilo, 2026. Inoffizielles Fan-Werk, nicht kommerziell.
