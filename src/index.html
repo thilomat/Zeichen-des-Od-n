@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1c140e">
+<title>Die Haut des Odûn</title>
+<style>
+:root{
+  --perg:#eadcbf; --perg2:#dcc9a3; --ink:#2a1c12; --ink2:#5b4632; --red:#8e2219; --red2:#b23a2c;
+  --green:#3d5a2a; --gold:#c69a3c; --wood:#2a1d14; --wood2:#3b2a1d; --shadow:rgba(0,0,0,.45);
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#120c08;color:var(--ink);overflow:hidden;
+  font-family:"Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;-webkit-user-select:none;user-select:none;
+  overscroll-behavior:none;touch-action:manipulation}
+#game{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none;display:block}
+.hidden{display:none!important}
+button{font-family:inherit;cursor:pointer}
+
+/* HUD */
+#hud{position:fixed;left:0;right:0;top:0;padding:calc(var(--safe-t) + 6px) 8px 6px;pointer-events:none;
+  background:linear-gradient(rgba(18,12,8,.85),rgba(18,12,8,.55) 70%,rgba(18,12,8,0));color:#f1e4c8;z-index:5}
+#hudrow1{display:flex;justify-content:space-between;align-items:center;font-size:14px;letter-spacing:.2px}
+#hudday b{color:#ffd27a}
+#hudcount{display:flex;gap:10px;font-size:13px}
+#hudcount span{white-space:nowrap}
+.sig{color:#9fd18b}.blut{color:#ff8c78}
+#hudbars{display:flex;gap:6px;margin-top:5px}
+.bar{flex:1;height:14px;border-radius:3px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.18);position:relative;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;display:block}
+.bar em{position:absolute;inset:0;font-style:normal;font-size:10.5px;line-height:13px;text-align:center;color:#fff;text-shadow:0 1px 1px #000}
+.bar.le i{background:linear-gradient(#d94a3a,#8e2219)}
+.bar.au i{background:linear-gradient(#e0b545,#9a741c)}
+.bar.ae i{background:linear-gradient(#5b8fd9,#2c4f8f)}
+#hudplace{margin-top:4px;font-size:12px;opacity:.85;min-height:15px}
+#toastbox{position:fixed;left:0;right:0;top:calc(var(--safe-t) + 78px);display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;z-index:30}
+.toast{background:rgba(26,18,12,.92);color:#f6e7c6;border:1px solid #6b5236;border-radius:16px;padding:5px 12px;font-size:14px;
+  animation:tin .25s ease-out, tout .4s ease-in 2.6s forwards;box-shadow:0 2px 6px var(--shadow)}
+@keyframes tin{from{opacity:0;transform:translateY(-6px)}to{opacity:1}}
+@keyframes tout{to{opacity:0;transform:translateY(-6px)}}
+
+/* Leiste unten */
+#bottombar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:4px;padding:6px 6px calc(var(--safe-b) + 6px);
+  background:linear-gradient(rgba(18,12,8,0),rgba(18,12,8,.75) 30%,rgba(18,12,8,.92));z-index:5}
+#bottombar button{flex:1;min-height:50px;border:1px solid #5d4630;border-radius:8px;background:linear-gradient(#3a2a1c,#241810);
+  color:#f1e4c8;font-size:12px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+#bottombar button .ic{font-size:18px;line-height:18px}
+#bottombar button:active{transform:translateY(1px);filter:brightness(1.2)}
+#zoombtn{position:fixed;right:8px;bottom:calc(var(--safe-b) + 70px);width:44px;height:44px;border-radius:22px;border:1px solid #5d4630;
+  background:rgba(36,24,16,.85);color:#f1e4c8;font-size:20px;z-index:5}
+
+/* Dialoge */
+.sheet{position:fixed;left:0;right:0;bottom:0;max-height:92%;z-index:20;display:flex;flex-direction:column;
+  background:var(--perg);border-top:3px solid #6b4a2b;border-radius:14px 14px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.6);
+  animation:sheetin .28s ease-out}
+@keyframes sheetin{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.sheet .scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px calc(var(--safe-b) + 14px)}
+.sheet .pic{width:100%;display:block;image-rendering:pixelated;border-radius:11px 11px 0 0;background:#000}
+.sheet h2{font-size:21px;margin:12px 0 4px;color:var(--red);font-variant:small-caps;letter-spacing:.5px}
+.sheet p{font-size:16.5px;line-height:1.45;margin:8px 0}
+.sheet .note{font-size:14px;color:var(--ink2);background:rgba(0,0,0,.05);border-left:3px solid var(--gold);padding:6px 9px;border-radius:4px;margin:8px 0}
+.choices{display:flex;flex-direction:column;gap:8px;margin:12px 0 4px}
+.choice{min-height:48px;text-align:left;font-size:16px;line-height:1.3;padding:10px 12px;border-radius:9px;color:#fff6e6;
+  background:linear-gradient(#9a2a20,#7a1c15);border:1px solid #5a120c;box-shadow:0 2px 0 #4a0f0a}
+.choice small{display:block;font-size:12.5px;opacity:.85;margin-top:2px}
+.choice.alt{background:linear-gradient(#4b6a33,#344d23);border-color:#25361a;box-shadow:0 2px 0 #1d2b14}
+.choice.grey{background:linear-gradient(#6b5a48,#53443a);border-color:#3c3028;box-shadow:0 2px 0 #2c231d}
+.choice:disabled{opacity:.45}
+.choice:active{transform:translateY(1px)}
+.fxline{font-size:14px;color:var(--green);margin:6px 0;font-weight:bold}
+.fxline.bad{color:var(--red)}
+#veil{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:15}
+
+/* Wuerfelschale */
+#dice{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:rgba(10,6,4,.7)}
+#dicebox{width:min(92vw,420px);background:var(--perg);border:3px solid #6b4a2b;border-radius:14px;padding:14px 14px 12px;box-shadow:0 8px 30px #000}
+#dicebox h3{margin:0 0 2px;font-size:19px;color:var(--red);font-variant:small-caps}
+#dicebox .sub{font-size:13.5px;color:var(--ink2);margin-bottom:6px}
+#dicemods{font-size:13px;color:var(--ink2);margin:4px 0 8px}
+#dicerow{display:flex;justify-content:center;gap:14px;margin:10px 0 6px}
+.die{width:74px;text-align:center}
+.die .face{width:66px;height:66px;margin:0 auto;background:#fbf4e3;border:3px solid #3a2a1c;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:bold;color:#2a1c12;box-shadow:0 3px 0 #3a2a1c;
+  clip-path:polygon(50% 0,100% 28%,100% 72%,50% 100%,0 72%,0 28%)}
+.die .face.d6{clip-path:none;border-radius:10px}
+.die.rolling .face{animation:shake .12s infinite}
+@keyframes shake{0%{transform:rotate(-8deg) scale(.96)}50%{transform:rotate(8deg) scale(1.04)}100%{transform:rotate(-8deg) scale(.96)}}
+.die .lab{font-size:12.5px;margin-top:5px;color:var(--ink2)}
+.die.ok .face{background:#e4f0d5;border-color:#3d5a2a}
+.die.bad .face{background:#f5d9d2;border-color:#8e2219}
+#diceresult{text-align:center;font-size:17px;font-weight:bold;min-height:24px;margin:6px 0}
+#diceresult.ok{color:var(--green)} #diceresult.bad{color:var(--red)}
+#dicetap{text-align:center;font-size:14px;color:var(--ink2);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.45}}
+#dicebtns{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+
+/* Panels */
+.panel{position:fixed;inset:0;z-index:25;background:var(--perg);display:flex;flex-direction:column}
+.panel header{display:flex;align-items:center;justify-content:space-between;padding:calc(var(--safe-t) + 8px) 12px 8px;background:var(--wood);color:#f1e4c8}
+.panel header h2{margin:0;font-size:20px;font-variant:small-caps;letter-spacing:.6px}
+.panel header button{background:none;border:1px solid #6b5236;color:#f1e4c8;border-radius:8px;min-width:44px;min-height:40px;font-size:18px}
+.panel .body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 14px calc(var(--safe-b) + 20px)}
+.panel h3{font-size:17px;color:var(--red);margin:16px 0 6px;font-variant:small-caps;border-bottom:1px solid var(--perg2);padding-bottom:3px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.cell{background:rgba(255,255,255,.35);border:1px solid var(--perg2);border-radius:7px;padding:6px 4px;text-align:center}
+.cell b{display:block;font-size:20px}
+.cell span{font-size:12px;color:var(--ink2)}
+table.t{width:100%;border-collapse:collapse;font-size:14.5px}
+table.t td,table.t th{padding:6px 4px;border-bottom:1px solid var(--perg2);text-align:left;vertical-align:top}
+table.t th{font-size:12.5px;color:var(--ink2);font-weight:normal}
+table.t td.n{text-align:right;white-space:nowrap}
+.itm{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 2px;border-bottom:1px solid var(--perg2);font-size:15px}
+.itm small{display:block;color:var(--ink2);font-size:12.5px}
+.btn{min-height:40px;padding:6px 12px;border-radius:8px;border:1px solid #5a120c;background:linear-gradient(#9a2a20,#7a1c15);color:#fff6e6;font-size:14px}
+.btn.alt{background:linear-gradient(#4b6a33,#344d23);border-color:#25361a}
+.btn.grey{background:linear-gradient(#6b5a48,#53443a);border-color:#3c3028}
+.btn:disabled{opacity:.4}
+.jent{padding:8px 0;border-bottom:1px solid var(--perg2);font-size:15px;line-height:1.4}
+.jent .d{font-size:12px;color:var(--ink2)}
+.tag{display:inline-block;font-size:12px;padding:1px 7px;border-radius:10px;background:var(--perg2);margin:2px 3px 2px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.set{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--perg2);font-size:15.5px;gap:10px}
+#mapcanvas{width:100%;image-rendering:pixelated;border:2px solid #6b4a2b;border-radius:6px;background:#c9b48a;touch-action:pan-y}
+
+/* Kampf */
+#combat{position:fixed;inset:0;z-index:30;background:radial-gradient(ellipse at 50% 30%,#3b2a1d,#140d08 75%);color:#f1e4c8;display:flex;flex-direction:column}
+#cbtop{padding:calc(var(--safe-t) + 8px) 10px 4px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.foe{width:108px;border:2px solid #5d4630;border-radius:10px;background:rgba(0,0,0,.35);padding:4px;text-align:center;position:relative}
+.foe.sel{border-color:#ffd27a;box-shadow:0 0 10px rgba(255,210,122,.5)}
+.foe.dead{opacity:.35;filter:grayscale(1)}
+.foe canvas{width:96px;height:96px;image-rendering:pixelated;display:block;margin:0 auto}
+.foe .nm{font-size:12.5px;margin-top:2px;line-height:1.2}
+.foe .dk{position:absolute;right:4px;top:4px;font-size:11px;background:#8e2219;color:#fff;border-radius:6px;padding:0 5px}
+.foe .lb{height:7px;background:#000;border-radius:3px;overflow:hidden;margin-top:3px}
+.foe .lb i{display:block;height:100%;background:#c0392b}
+#cblog{flex:1;overflow-y:auto;margin:6px 10px;padding:8px 10px;background:rgba(0,0,0,.35);border-radius:10px;font-size:14.5px;line-height:1.4}
+#cblog div{margin:2px 0}
+#cblog .h{color:#ffd27a}#cblog .e{color:#ff9f8f}#cblog .g{color:#a5dc8c}#cblog .s{color:#9cc4ff}#cblog .x{color:#c8b89c;font-size:13px}
+#cbhero{padding:4px 10px;font-size:13px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+#cbhero .bar{min-width:90px;flex:1}
+#cbacts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px 8px calc(var(--safe-b) + 8px)}
+#cbacts button{min-height:48px;border-radius:9px;border:1px solid #5a120c;background:linear-gradient(#9a2a20,#7a1c15);color:#fff6e6;font-size:13.5px;line-height:1.15;padding:4px}
+#cbacts button.alt{background:linear-gradient(#4b6a33,#344d23);border-color:#25361a}
+#cbacts button.grey{background:linear-gradient(#6b5a48,#53443a);border-color:#3c3028}
+#cbacts button:disabled{opacity:.35}
+#cbinfo{text-align:center;font-size:13px;color:#d9c7a5;padding:0 10px 2px}
+
+/* Titel */
+#title{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  background:#0d0906;color:#f1e4c8;padding:0 20px calc(var(--safe-b) + 28px)}
+#titlepic{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated;opacity:.95}
+#titlebox{position:relative;text-align:center;width:min(92vw,440px)}
+#titlebox h1{font-size:40px;margin:0;color:#f6dd9f;text-shadow:0 3px 0 #3a1a0e,0 0 18px rgba(0,0,0,.8);font-variant:small-caps;letter-spacing:1px}
+#titlebox .sub{font-size:15px;margin:4px 0 18px;text-shadow:0 1px 3px #000}
+#titlebox button{display:block;width:100%;margin:8px 0;min-height:52px;font-size:18px;border-radius:10px;border:1px solid #5a120c;
+  background:linear-gradient(#9a2a20,#7a1c15);color:#fff6e6;box-shadow:0 3px 0 #4a0f0a}
+#titlebox button.alt{background:linear-gradient(#4b6a33,#344d23);border-color:#25361a;box-shadow:0 3px 0 #1d2b14}
+#titlebox .fine{font-size:11.5px;opacity:.7;margin-top:12px;line-height:1.4}
+#pagebody p.reading,#pagebody .note.reading{background:rgba(232,190,90,.28);border-radius:6px;box-shadow:0 0 0 4px rgba(232,190,90,.28)}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud" class="hidden">
+  <div id="hudrow1"><div id="hudday"></div><div id="hudcount"></div></div>
+  <div id="hudbars">
+    <div class="bar le"><i></i><em></em></div>
+    <div class="bar au"><i></i><em></em></div>
+    <div class="bar ae"><i></i><em></em></div>
+  </div>
+  <div id="hudplace"></div>
+</div>
+<div id="toastbox"></div>
+<button id="zoombtn" class="hidden" aria-label="Zoom">⊕</button>
+<div id="bottombar" class="hidden">
+  <button data-b="held"><span class="ic">🛡</span>Held</button>
+  <button data-b="pack"><span class="ic">🎒</span>Gepäck</button>
+  <button data-b="lager"><span class="ic">🔥</span>Lager</button>
+  <button data-b="map"><span class="ic">🗺</span>Karte</button>
+  <button data-b="journal"><span class="ic">📜</span>Tagebuch</button>
+  <button data-b="menu"><span class="ic">⚙</span>Menü</button>
+</div>
+<div id="veil" class="hidden"></div>
+<div id="sheet" class="sheet hidden"></div>
+<div id="panel" class="panel hidden"></div>
+<div id="combat" class="hidden"></div>
+<div id="dice" class="hidden"><div id="dicebox"></div></div>
+<div id="title">
+  <canvas id="titlepic" width="160" height="90"></canvas>
+  <div id="titlebox">
+    <h1>Die Haut des Odûn</h1>
+    <div class="sub">Ein Soloabenteuer für Yurrgold bren Dundoch</div>
+    <button id="btnContinue" class="hidden">Weiterspielen</button>
+    <button id="btnNew" class="alt">Neues Spiel</button>
+    <div class="fine">Inoffizielles Fan-Spiel nach den Regeln von DSA 4.1. Das Schwarze Auge und Aventurien sind Marken ihrer Rechteinhaber.<br>Ton an? Einmal tippen, dann spielt die Musik.</div>
+  </div>
+</div>
+<!--SCRIPTS-->
+</body>
+</html>
